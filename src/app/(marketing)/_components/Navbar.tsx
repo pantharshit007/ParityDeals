@@ -20,7 +20,7 @@ function Navbar() {
         <Link className="text-lg" href="#">
           About
         </Link>
-        <span className="text-lg">
+        <span className="text-lg cursor-pointer">
           <SignedIn>
             <Link href="/dashboard">Dashboard</Link>
           </SignedIn>
