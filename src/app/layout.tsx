@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Fondamento } from "next/font/google";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -11,6 +13,13 @@ const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
+});
+
+const fontHeading = Fondamento({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-heading",
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -24,12 +33,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans bg-background`}
-      >
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} ${fontHeading.variable} antialiased font-sans bg-background`}
+        >
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

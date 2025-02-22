@@ -17,7 +17,7 @@ const config: Config = {
           sm: "100%",
           md: "100%",
           lg: "100%",
-          xl: "1200px",
+          xl: "1400px",
         },
       },
       colors: {
@@ -65,6 +65,7 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-geist-sans)", ...fontFamily.sans],
         mono: ["var(--font-geist-mono)", ...fontFamily.mono],
+        heading: ["var(--font-heading)", ...fontFamily.sans],
       },
       borderRadius: {
         lg: "var(--radius)",
