@@ -163,7 +163,7 @@ export const UserSupscriptionTable = pgTable(
   "user_supscriptions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    clerkUserId: uuid("clerk_user_id").notNull().unique(),
+    clerkUserId: text("clerk_user_id").notNull().unique(),
     stripeSubscriptionItemId: text("stripe_subscription_item_id"),
     stripeSubscriptionId: text("stripe_subscription_id"),
     stripeCustomerId: text("stripe_customer_id"),

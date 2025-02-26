@@ -1,0 +1,1 @@
+ALTER TABLE "user_supscriptions" ALTER COLUMN "clerk_user_id" SET DATA TYPE text;

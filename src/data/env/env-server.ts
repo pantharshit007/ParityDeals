@@ -6,9 +6,11 @@ export const env_server = createEnv({
   server: {
     CLERK_SECRET_KEY: z.string(),
     DATABASE_URL: z.string().url(),
+    CLERK_WEBHOOK_SECRET: z.string(),
   },
   runtimeEnv: {
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     DATABASE_URL: process.env.DATABASE_URL,
+    CLERK_WEBHOOK_SECRET: process.env.CLERK_WEBHOOK_SECRET,
   },
 });
