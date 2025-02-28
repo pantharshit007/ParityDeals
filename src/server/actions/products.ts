@@ -3,7 +3,7 @@
 import { ProductDetailsSchema } from "@/data/types/zod-type";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { createProducts } from "@/server/db-queries/products";
+import { createProducts, deleteProducts } from "@/server/db-queries/products";
 import { redirect } from "next/navigation";
 
 export async function createProductAction(
@@ -22,4 +22,19 @@ export async function createProductAction(
   }
 
   redirect(`/dashboard/products/${res.id}/edits?tab=countries`);
+}
+
+export async function deleteProduct(id: string) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return { error: true, message: "Error in deleting product." };
+  }
+
+  const isSuccess = await deleteProducts({ id, userId });
+
+  return {
+    success: isSuccess,
+    message: isSuccess ? "Product deleted successfully." : "Error in deleting product.",
+  };
 }
