@@ -1,8 +1,17 @@
 import { db } from "@/drizzle/db";
 import { ProductCustomizationTable, ProductsTable } from "@/drizzle/schema";
+import { CACHE_TAGS, dbCache, getUserTag, revalidateDbCache } from "@/lib/cache";
 import { and, eq } from "drizzle-orm";
 
 export function getProducts(userId: string, { limit }: { limit?: number }) {
+  const cacheFn = dbCache({
+    cb: getProductsInternal,
+    tags: [getUserTag(userId, CACHE_TAGS.PRODUCTS)],
+  });
+  return cacheFn(userId, { limit });
+}
+
+function getProductsInternal(userId: string, { limit }: { limit?: number }) {
   return db.query.ProductsTable.findMany({
     where: ({ clerkUserId }, { eq }) => eq(clerkUserId, userId),
     orderBy: ({ createdAt }, { desc }) => desc(createdAt),
@@ -15,7 +24,7 @@ export async function createProducts(data: typeof ProductsTable.$inferInsert) {
   const [newProd] = await db
     .insert(ProductsTable)
     .values(data)
-    .returning({ id: ProductsTable.id });
+    .returning({ id: ProductsTable.id, userId: ProductsTable.clerkUserId });
 
   try {
     await db
@@ -35,6 +44,8 @@ export async function createProducts(data: typeof ProductsTable.$inferInsert) {
     };
   }
 
+  // revalidate cache: products
+  revalidateDbCache({ id: newProd.id, userId: newProd.userId, tag: CACHE_TAGS.PRODUCTS });
   return newProd;
 }
 
@@ -43,7 +54,10 @@ export async function deleteProducts({ id, userId }: { id: string; userId: strin
     // prettier-ignore
     const {rowCount} = await db
     .delete(ProductsTable)
-    .where(and (eq(ProductsTable.id, id), eq(ProductsTable.clerkUserId, userId)))
+      .where(and(eq(ProductsTable.id, id), eq(ProductsTable.clerkUserId, userId)))
+
+    // revalidate cache: products
+    rowCount > 0 && revalidateDbCache({ id, userId, tag: CACHE_TAGS.PRODUCTS });
 
     return rowCount > 0;
   } catch (error) {
