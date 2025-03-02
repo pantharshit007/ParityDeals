@@ -45,6 +45,12 @@ export function dbCache<T extends (...args: any[]) => Promise<any>>({ cb, tags }
   return cache(unstable_cache<T>(cb, undefined, { tags: [...tags, "*"] }));
 }
 
+/**
+ *  Revalidate cache for the given tag
+ * @param id string
+ * @param userId string
+ * @param tag ValidTags
+ */
 export function revalidateDbCache({ id, userId, tag }: revalidateCacheOptions) {
   revalidateTag(getGlobalTag(tag));
   if (userId) revalidateTag(getUserTag(userId, tag));

@@ -18,21 +18,36 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { createProductAction } from "@/server/actions/products";
+import { createProductAction, updateProductAction } from "@/server/actions/products";
 import { toast } from "sonner";
+import { ProductType } from "@/data/types/type";
 
-function ProductDetailsForm() {
+function ProductDetailsForm({ product }: { product?: ProductType }) {
   const form = useForm<z.infer<typeof ProductDetailsSchema>>({
     resolver: zodResolver(ProductDetailsSchema),
     defaultValues: {
-      name: "",
-      url: "",
-      description: "",
+      name: product?.name ?? "",
+      url: product?.url ?? "",
+      description: product?.description ?? "",
     },
   });
 
   async function handleSubmit(values: z.infer<typeof ProductDetailsSchema>) {
-    const res = await createProductAction(values);
+    if (product) {
+      if (
+        values.name === product.name &&
+        values.url === product.url &&
+        values.description === product.description
+      ) {
+        toast.info("No changes detected");
+        return;
+      }
+    }
+
+    const action =
+      product === null ? createProductAction : updateProductAction.bind(null, product!.id);
+
+    const res = await action(values);
     if (res?.error) {
       toast.error(res.message);
       console.log("Error in creating product", res.message);

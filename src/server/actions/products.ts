@@ -3,7 +3,7 @@
 import { ProductDetailsSchema } from "@/data/types/zod-type";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { createProducts, deleteProducts } from "@/server/db-queries/products";
+import { createProducts, deleteProducts, updateProducts } from "@/server/db-queries/products";
 import { redirect } from "next/navigation";
 
 export async function createProductAction(
@@ -22,6 +22,25 @@ export async function createProductAction(
   }
 
   redirect(`/dashboard/products/${res.id}/edits?tab=countries`);
+}
+
+export async function updateProductAction(
+  id: string,
+  unsafeData: z.infer<typeof ProductDetailsSchema>
+): Promise<{ error: boolean; message: string } | undefined> {
+  const { userId } = await auth();
+  const { success, data } = ProductDetailsSchema.safeParse(unsafeData);
+
+  if (!success || !userId) {
+    return { error: true, message: "Error in creating product." };
+  }
+
+  const res = await updateProducts(data, { id, userId });
+  if (!res) {
+    return { error: true, message: "Error in updating product." };
+  }
+
+  return { error: false, message: "Prodcut updated successfully" };
 }
 
 export async function deleteProduct(id: string) {
