@@ -1,7 +1,20 @@
+import { insertType } from "@/data/types/type";
 import { db } from "@/drizzle/db";
-import { ProductCustomizationTable, ProductsTable } from "@/drizzle/schema";
-import { CACHE_TAGS, dbCache, getIdTag, getUserTag, revalidateDbCache } from "@/lib/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import {
+  CountryGroupDiscountTable,
+  ProductCustomizationTable,
+  ProductsTable,
+} from "@/drizzle/schema";
+import {
+  CACHE_TAGS,
+  dbCache,
+  getGlobalTag,
+  getIdTag,
+  getUserTag,
+  revalidateDbCache,
+} from "@/lib/cache";
+import { BatchItem } from "drizzle-orm/batch";
 
 export function getProducts(userId: string, { limit }: { limit?: number }) {
   const cacheFn = dbCache({
@@ -93,8 +106,104 @@ export async function getSingleProduct(id: string, userId: string) {
   return cacheFn(id, userId);
 }
 
-export async function getSingleProductInternal(id: string, userId: string) {
+function getSingleProductInternal(id: string, userId: string) {
   return db.query.ProductsTable.findFirst({
     where: and(eq(ProductsTable.id, id), eq(ProductsTable.clerkUserId, userId)),
   });
+}
+
+export async function getProductCountryGroups({
+  productId,
+  userId,
+}: {
+  productId: string;
+  userId: string;
+}) {
+  const cacheFn = dbCache({
+    cb: getProductCountryGroupsInternal,
+    tags: [
+      getIdTag(productId, CACHE_TAGS.PRODUCTS),
+      getGlobalTag(CACHE_TAGS.COUNTRIES),
+      getGlobalTag(CACHE_TAGS.COUNTRY_GROUPS),
+    ],
+  });
+  return cacheFn(productId, userId);
+}
+
+async function getProductCountryGroupsInternal(productId: string, userId: string) {
+  const product = await getSingleProduct(productId, userId);
+  if (!product) return [];
+
+  const data = await db.query.CountryGroupTable.findMany({
+    with: {
+      countries: { columns: { name: true, code: true } },
+      countryGroupDiscounts: {
+        columns: { coupon: true, discountPercentage: true },
+        where: eq(CountryGroupDiscountTable.productId, productId),
+        limit: 1,
+      },
+    },
+  });
+
+  return data.map((grp) => ({
+    id: grp.id,
+    name: grp.name,
+    recommendedDiscountPercentage: grp.recommendedDiscountPercentage,
+    countries: grp.countries,
+    discount: grp.countryGroupDiscounts.at(0),
+  }));
+}
+
+export async function updateCountryDiscounts(
+  insert: insertType[],
+  deleteId: { countryGroupId: string }[],
+  { productId, userId }: { productId: string; userId: string }
+) {
+  try {
+    const product = await getSingleProduct(productId, userId);
+    if (!product) return false;
+
+    const statements: BatchItem<"pg">[] = [];
+    if (deleteId.length > 0) {
+      statements.push(
+        db.delete(CountryGroupDiscountTable).where(
+          and(
+            eq(CountryGroupDiscountTable.productId, productId),
+            inArray(
+              CountryGroupDiscountTable.countryGroupId,
+              deleteId.map((grp) => grp.countryGroupId)
+            )
+          )
+        )
+      );
+    }
+
+    if (insert.length > 0) {
+      statements.push(
+        db
+          .insert(CountryGroupDiscountTable)
+          .values(insert)
+          .onConflictDoUpdate({
+            target: [CountryGroupDiscountTable.productId, CountryGroupDiscountTable.countryGroupId],
+            set: {
+              coupon: sql.raw(`excluded.${CountryGroupDiscountTable.coupon.name}`),
+              discountPercentage: sql.raw(
+                `excluded.${CountryGroupDiscountTable.discountPercentage.name}`
+              ),
+            },
+          })
+      );
+    }
+
+    if (statements.length > 0) {
+      await db.batch(statements as [BatchItem<"pg">]);
+    }
+
+    // revalidate cache: products
+    revalidateDbCache({ id: productId, userId, tag: CACHE_TAGS.PRODUCTS });
+    return true;
+  } catch (error) {
+    console.error("[ERROR-UPDATE-COUNTRY-DISCOUNTS]", error);
+    return false;
+  }
 }

@@ -1,7 +1,7 @@
 import React from "react";
 import { PageWithBackButton } from "@/app/dashboard/_components/PageWithBackButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import ProductDetailsForm from "@/app/dashboard/_components/productforms/ProductDetailsForm";
+import ProductDetailsForm from "@/app/dashboard/_components/forms/ProductDetailsForm";
 
 function page() {
   return (
