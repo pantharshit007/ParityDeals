@@ -1,16 +1,22 @@
 "use server";
 
-import { productCountryDiscountsSchema, ProductDetailsSchema } from "@/data/types/zod-type";
+import {
+  productCountryDiscountsSchema,
+  productCustomizationSchema,
+  ProductDetailsSchema,
+} from "@/data/types/zod-type";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import {
   createProducts,
   deleteProducts,
   updateCountryDiscounts,
+  updateProductCustomization,
   updateProducts,
 } from "@/server/db-queries/products";
 import { redirect } from "next/navigation";
 import { insertType } from "@/data/types/type";
+import { canCustomizeBanner } from "../permissions";
 
 export async function createProductAction(
   unsafeData: z.infer<typeof ProductDetailsSchema>
@@ -101,5 +107,25 @@ export async function updateCountryDiscountsAction(
     return { error: true, message: "Error in updating product discounts." };
   }
 
-  return { error: false, message: "Prodcut updated successfully" };
+  return { error: false, message: "Country Discount Saved!" };
+}
+
+export async function updateProductCustomizationAction(
+  productId: string,
+  unsafeData: z.infer<typeof productCustomizationSchema>
+) {
+  const { userId } = await auth();
+  const { success, data } = productCustomizationSchema.safeParse(unsafeData);
+  const canCustomize = await canCustomizeBanner(userId);
+
+  if (!success || !userId || !canCustomize) {
+    return { error: true, message: "Error in creating product customization." };
+  }
+
+  const res = await updateProductCustomization(data, { productId, userId });
+  if (!res) {
+    return { error: true, message: "Error in creating product customization." };
+  }
+
+  return { error: false, message: "Banner updated!" };
 }

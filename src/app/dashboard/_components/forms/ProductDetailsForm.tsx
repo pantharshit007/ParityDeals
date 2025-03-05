@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { createProductAction, updateProductAction } from "@/server/actions/products";
 import { toast } from "sonner";
 import { ProductType } from "@/data/types/type";
+import { RequiredLabelIcon } from "@/components/RequiredLabelIcon";
 
 function ProductDetailsForm({ product }: { product?: ProductType }) {
   const form = useForm<z.infer<typeof ProductDetailsSchema>>({
@@ -66,7 +67,10 @@ function ProductDetailsForm({ product }: { product?: ProductType }) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>
+                    Name
+                    <RequiredLabelIcon />
+                  </FormLabel>
 
                   <FormControl>
                     <Input {...field} placeholder="Enter Name" />
@@ -83,7 +87,7 @@ function ProductDetailsForm({ product }: { product?: ProductType }) {
                 <FormItem>
                   <FormLabel>
                     Enter your website URL
-                    {/* <RequiredLabelIcon /> */}
+                    <RequiredLabelIcon />
                   </FormLabel>
                   <FormControl>
                     <Input {...field} />

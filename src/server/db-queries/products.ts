@@ -207,3 +207,51 @@ export async function updateCountryDiscounts(
     return false;
   }
 }
+
+export async function getProductCustomization({
+  productId,
+  userId,
+}: {
+  productId: string;
+  userId: string;
+}) {
+  const cacheFn = dbCache({
+    cb: getProductCustomizationInternal,
+    tags: [getIdTag(productId, CACHE_TAGS.PRODUCTS), getUserTag(userId, CACHE_TAGS.PRODUCTS)],
+  });
+  return cacheFn(productId, userId);
+}
+
+async function getProductCustomizationInternal(productId: string, userId: string) {
+  const data = await db.query.ProductsTable.findFirst({
+    where: and(eq(ProductsTable.id, productId), eq(ProductsTable.clerkUserId, userId)),
+    with: {
+      productCustomization: true,
+    },
+  });
+
+  return data?.productCustomization;
+}
+
+export async function updateProductCustomization(
+  data: Partial<typeof ProductCustomizationTable.$inferInsert>,
+  { productId, userId }: { productId: string; userId: string }
+) {
+  try {
+    const product = await getSingleProduct(productId, userId);
+    if (!product) return false;
+
+    const { rowCount } = await db
+      .update(ProductCustomizationTable)
+      .set(data)
+      .where(and(eq(ProductCustomizationTable.productId, productId)));
+
+    // revalidate cache: products
+    rowCount > 0 && revalidateDbCache({ id: productId, userId, tag: CACHE_TAGS.PRODUCTS });
+
+    return rowCount > 0;
+  } catch (error) {
+    console.error("[ERROR-UPDATE-PRODUCT-CUSTOMIZATION]", error);
+    return false;
+  }
+}

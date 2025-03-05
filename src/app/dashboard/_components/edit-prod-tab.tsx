@@ -1,9 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ProductDetailsForm from "./forms/ProductDetailsForm";
 import { notFound } from "next/navigation";
-import { CountryGrpsType, ProductType } from "@/data/types/type";
-import { getProductCountryGroups } from "@/server/db-queries/products";
+import { ProductType } from "@/data/types/type";
+import { getProductCountryGroups, getProductCustomization } from "@/server/db-queries/products";
 import { CountryDiscountsForm } from "./forms/CountryDiscountsForm";
+import { canCustomizeBanner, canRemoveBranding } from "@/server/permissions";
+import { ProductCustomizationForm } from "./forms/ProductCustomizationForm";
 
 export function DetailsTab({ product }: { product: ProductType }) {
   return (
@@ -35,6 +37,33 @@ export async function CountryTab({ productId, userId }: { productId: string; use
       </CardHeader>
       <CardContent>
         <CountryDiscountsForm productId={productId} countryGroups={countryGroups} />
+      </CardContent>
+    </Card>
+  );
+}
+
+export async function CustomizationsTab({
+  productId,
+  userId,
+}: {
+  productId: string;
+  userId: string;
+}) {
+  const customization = await getProductCustomization({ productId, userId });
+
+  if (customization == null) return notFound();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-xl">Banner Customization</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ProductCustomizationForm
+          canRemoveBranding={await canRemoveBranding(userId)}
+          canCustomizeBanner={await canCustomizeBanner(userId)}
+          customization={customization}
+        />
       </CardContent>
     </Card>
   );

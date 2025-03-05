@@ -2,7 +2,11 @@ import React from "react";
 import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 
-import { CountryTab, DetailsTab } from "@/app/dashboard/_components/edit-prod-tab";
+import {
+  CountryTab,
+  CustomizationsTab,
+  DetailsTab,
+} from "@/app/dashboard/_components/edit-prod-tab";
 import { PageWithBackButton } from "@/app/dashboard/_components/PageWithBackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getSingleProduct } from "@/server/db-queries/products";
@@ -42,8 +46,7 @@ async function EditProductPage({
           <CountryTab productId={product.id} userId={userId} />
         </TabsContent>
         <TabsContent value="customization">
-          {/* <CustomizationsTab productId={productId} userId={userId} /> */}
-          Customizations
+          <CustomizationsTab productId={product.id} userId={userId} />
         </TabsContent>
       </Tabs>
     </PageWithBackButton>

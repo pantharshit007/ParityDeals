@@ -25,3 +25,14 @@ export interface insertType {
   coupon: string;
   discountPercentage: number;
 }
+
+export interface customizationType {
+  productId: string;
+  locationMessage: string;
+  backgroundColor: string;
+  textColor: string;
+  fontSize: string;
+  bannerContainer: string;
+  isSticky: boolean;
+  classPrefix: string | null;
+}
