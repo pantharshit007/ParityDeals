@@ -13,6 +13,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:uptCountryGrps": "dotenv -e .env tsx ./src/tasks/updateCountryGrps.ts",
+    "db:status": "dotenv -e .env tsx ./src/drizzle/checkStatus.ts",
     "clean": "rm -rf .next",
     "postinstall": "drizzle-kit generate"
   },
