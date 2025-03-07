@@ -12,7 +12,7 @@ async function page() {
 
   if (!userId) return redirectToSignIn();
 
-  const products = await getProducts(userId, { limit: 6 });
+  const products = await getProducts(userId, 6);
 
   if (products.length === 0) return NoProducts();
 

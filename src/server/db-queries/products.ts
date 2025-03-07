@@ -1,6 +1,6 @@
 import { insertType } from "@/data/types/type";
 import { db } from "@/drizzle/db";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, count, eq, inArray, sql } from "drizzle-orm";
 import {
   CountryGroupDiscountTable,
   ProductCustomizationTable,
@@ -16,7 +16,7 @@ import {
 } from "@/lib/cache";
 import { BatchItem } from "drizzle-orm/batch";
 
-export function getProducts(userId: string, { limit }: { limit?: number }) {
+export function getProducts(userId: string, limit?: number) {
   const cacheFn = dbCache({
     cb: getProductsInternal,
     tags: [getUserTag(userId, CACHE_TAGS.PRODUCTS)],
@@ -254,4 +254,21 @@ export async function updateProductCustomization(
     console.error("[ERROR-UPDATE-PRODUCT-CUSTOMIZATION]", error);
     return false;
   }
+}
+
+export async function getProductCount(userId: string) {
+  const cacheFn = dbCache({
+    cb: getProductCountInternal,
+    tags: [getUserTag(userId, CACHE_TAGS.PRODUCTS)],
+  });
+  return cacheFn(userId);
+}
+
+async function getProductCountInternal(userId: string) {
+  const counts = await db
+    .select({ productCount: count() })
+    .from(ProductsTable)
+    .where(eq(ProductsTable.clerkUserId, userId));
+
+  return counts[0]?.productCount ?? 0;
 }

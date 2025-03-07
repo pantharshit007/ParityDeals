@@ -67,7 +67,6 @@ export function ProductCustomizationForm({
           customization={formValues}
           canRemoveBranding={canRemoveBranding}
         />
-        Banner
       </div>
 
       {!canCustomizeBanner && (

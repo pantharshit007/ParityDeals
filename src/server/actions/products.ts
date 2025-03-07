@@ -16,15 +16,16 @@ import {
 } from "@/server/db-queries/products";
 import { redirect } from "next/navigation";
 import { insertType } from "@/data/types/type";
-import { canCustomizeBanner } from "../permissions";
+import { canCreateProduct, canCustomizeBanner } from "@/server/permissions";
 
 export async function createProductAction(
   unsafeData: z.infer<typeof ProductDetailsSchema>
 ): Promise<{ error: boolean; message: string } | undefined> {
   const { userId } = await auth();
   const { success, data } = ProductDetailsSchema.safeParse(unsafeData);
+  const canCreateProd = await canCreateProduct(userId);
 
-  if (!success || !userId) {
+  if (!success || !userId || !canCreateProd) {
     return { error: true, message: "Error in creating product." };
   }
 
