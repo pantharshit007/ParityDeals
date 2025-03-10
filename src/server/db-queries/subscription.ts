@@ -2,7 +2,7 @@ import { subscriptionTiers } from "@/data/subscriptionTiers";
 import { db } from "@/drizzle/db";
 import { UserSupscriptionTable } from "@/drizzle/schema";
 import { CACHE_TAGS, dbCache, getUserTag, revalidateDbCache } from "@/lib/cache";
-import { eq } from "drizzle-orm";
+import { eq, SQL } from "drizzle-orm";
 
 type DataProps = typeof UserSupscriptionTable.$inferInsert;
 
@@ -56,5 +56,29 @@ async function getUserSubscriptionTierInternal(userId: string) {
   } catch (error) {
     console.error("[ERROR-GET-USER-SUBSCRIPTION-TIER]", error);
     return subscriptionTiers["Free"];
+  }
+}
+
+export async function updateUserSubscription(
+  where: SQL,
+  data: Partial<typeof UserSupscriptionTable.$inferInsert>
+) {
+  try {
+    const [updatedSub] = await db
+      .update(UserSupscriptionTable)
+      .set(data)
+      .where(where)
+      .returning({ id: UserSupscriptionTable.id, userId: UserSupscriptionTable.clerkUserId });
+
+    if (updatedSub != null) {
+      revalidateDbCache({
+        id: updatedSub.id,
+        userId: updatedSub.userId,
+        tag: CACHE_TAGS.SUBSCRIPTION,
+      });
+    }
+  } catch (error) {
+    console.error("[ERROR-UPDATE-USER-SUBSCRIPTION]", error);
+    return;
   }
 }

@@ -159,6 +159,7 @@ export const countryGroupDiscountRelations = relations(CountryGroupDiscountTable
 
 export const TierEnum = pgEnum("tier", Object.keys(subscriptionTiers) as [TierNames]);
 
+// oh fuck: i wrote user supscription instead subscription not gonna change now.
 export const UserSupscriptionTable = pgTable(
   "user_supscriptions",
   {
