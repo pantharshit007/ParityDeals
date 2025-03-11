@@ -1,6 +1,6 @@
 <h1 align="center">Parity Deals</h1>
 
-### A simple deals website for Parity Purchasing Power
+### A simple deals website for Purchasing Power Parity
 
 #### Built with:
 
