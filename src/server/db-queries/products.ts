@@ -15,6 +15,7 @@ import {
   revalidateDbCache,
 } from "@/lib/cache";
 import { BatchItem } from "drizzle-orm/batch";
+import { removeTrailingSlash } from "@/lib/utils";
 
 export function getProducts(userId: string, limit?: number) {
   const cacheFn = dbCache({
@@ -271,4 +272,66 @@ async function getProductCountInternal(userId: string) {
     .where(eq(ProductsTable.clerkUserId, userId));
 
   return counts[0]?.productCount ?? 0;
+}
+
+export async function getProductBanner(productId: string, countryCode: string, url: string) {
+  const cacheFn = dbCache({
+    cb: getProductBannerInternal,
+    tags: [
+      getIdTag(productId, CACHE_TAGS.PRODUCTS),
+      getGlobalTag(CACHE_TAGS.COUNTRIES),
+      getGlobalTag(CACHE_TAGS.COUNTRY_GROUPS),
+    ],
+  });
+
+  return cacheFn(productId, countryCode, url);
+}
+
+async function getProductBannerInternal(productId: string, countryCode: string, url: string) {
+  try {
+    const data = await db.query.ProductsTable.findFirst({
+      where: and(eq(ProductsTable.id, productId), eq(ProductsTable.url, removeTrailingSlash(url))),
+      columns: { id: true, clerkUserId: true },
+      with: {
+        productCustomization: true,
+        countryGroupDiscounts: {
+          columns: { coupon: true, discountPercentage: true },
+          with: {
+            countryGroup: {
+              columns: {},
+              with: {
+                countries: {
+                  columns: { id: true, name: true },
+                  limit: 1,
+                  where: ({ code }, { eq }) => eq(code, countryCode),
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const discount = data?.countryGroupDiscounts.find(
+      (discount) => discount.countryGroup.countries.length > 0
+    );
+    const country = discount?.countryGroup.countries[0];
+    const product =
+      !data || !data.productCustomization
+        ? undefined
+        : {
+            id: data.id,
+            clerkUserId: data.clerkUserId,
+            customization: data.productCustomization,
+          };
+
+    const disc = !discount
+      ? undefined
+      : { coupon: discount.coupon, percentage: discount.discountPercentage };
+
+    return { product, discount: disc, country };
+  } catch (err) {
+    console.error("[ERROR-GET-PRODUCT-BANNER]", err);
+    return { product: undefined, discount: undefined, country: undefined };
+  }
 }

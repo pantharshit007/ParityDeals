@@ -12,6 +12,7 @@ export const env_server = createEnv({
     STRIPE_STANDARD_PLAN_STRIPE_PRICE_ID: z.string(),
     STRIPE_PREMIUM_PLAN_STRIPE_PRICE_ID: z.string(),
     STRIPE_WEBHOOK_SECRET: z.string(),
+    TEST_COUNTRY_CODE: z.string(),
   },
   runtimeEnv: {
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
@@ -22,5 +23,6 @@ export const env_server = createEnv({
     STRIPE_STANDARD_PLAN_STRIPE_PRICE_ID: process.env.STRIPE_STANDARD_PLAN_STRIPE_PRICE_ID,
     STRIPE_PREMIUM_PLAN_STRIPE_PRICE_ID: process.env.STRIPE_PREMIUM_PLAN_STRIPE_PRICE_ID,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    TEST_COUNTRY_CODE: process.env.TEST_COUNTRY_CODE,
   },
 });
