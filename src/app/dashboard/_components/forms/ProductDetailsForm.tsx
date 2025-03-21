@@ -46,7 +46,7 @@ function ProductDetailsForm({ product }: { product?: ProductType }) {
     }
 
     const action =
-      product === null ? createProductAction : updateProductAction.bind(null, product!.id);
+      product == null ? createProductAction : updateProductAction.bind(null, product!.id);
 
     const res = await action(values);
     if (res?.error) {

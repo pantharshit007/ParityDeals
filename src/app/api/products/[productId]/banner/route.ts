@@ -14,6 +14,9 @@ interface params {
     productId: string;
   };
 }
+
+export const runtime = "edge";
+
 export async function GET(req: NextRequest, { params: { productId } }: params) {
   const headersList = headers();
   const requestOriginUrl = headersList.get("referer") || headersList.get("origin");

@@ -1,3 +1,5 @@
+import { CHART_INTERVALS } from "../constant";
+
 export interface ProductType {
   id: string;
   name: string;
@@ -35,4 +37,11 @@ export interface customizationType {
   bannerContainer: string;
   isSticky: boolean;
   classPrefix: string | null;
+}
+
+export interface ViewsCountryChartType {
+  timezone: string;
+  productId?: string;
+  userId: string;
+  interval: (typeof CHART_INTERVALS)[keyof typeof CHART_INTERVALS];
 }

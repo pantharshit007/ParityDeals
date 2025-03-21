@@ -6,6 +6,12 @@ import Link from "next/link";
 import { ArrowRightIcon, PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProductGrid from "./_components/ProductGrid";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CHART_INTERVALS } from "@/data/constant";
+import { getViewsByDayChartData } from "@/server/db-queries/productViews";
+import ViewsByDayChart from "./_components/charts/ViewsByDayChart";
+import { HasPermission } from "@/components/HasPermission";
+import { canAccessAnalytics } from "@/server/permissions";
 
 async function page() {
   const { userId, redirectToSignIn } = await auth();
@@ -39,8 +45,31 @@ async function page() {
           <ArrowRightIcon className="group-hover:translate-x-1 transition-transform" />
         </Link>
       </h2>
+
+      <HasPermission permission={canAccessAnalytics} renderFallback>
+        <AnalyticsChart userId={userId} />
+      </HasPermission>
     </>
   );
 }
 
 export default page;
+
+async function AnalyticsChart({ userId }: { userId: string }) {
+  const chartData = await getViewsByDayChartData({
+    userId,
+    interval: CHART_INTERVALS.last30days,
+    timezone: "UTC",
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Views by Day</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ViewsByDayChart chartData={chartData} />
+      </CardContent>
+    </Card>
+  );
+}

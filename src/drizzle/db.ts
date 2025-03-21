@@ -3,8 +3,9 @@ import { neon } from "@neondatabase/serverless";
 import { env_server as env } from "@/data/env/env-server";
 import * as schema from "./schema";
 
+const log = process.env.NODE_ENV === "development" ? true : false;
 const sql = neon(env.DATABASE_URL, { fetchOptions: { debug: true } });
-export const db = drizzle({ client: sql, schema, logger: true });
+export const db = drizzle({ client: sql, schema, logger: log });
 
 // Function to check database connection status
 export async function checkStatus() {

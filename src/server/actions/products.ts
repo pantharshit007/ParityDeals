@@ -34,7 +34,7 @@ export async function createProductAction(
     return { error: true, message: res.message };
   }
 
-  redirect(`/dashboard/products/${res.id}/edits?tab=countries`);
+  redirect(`/dashboard/products/${res.id}/edit?tab=countries`);
 }
 
 export async function updateProductAction(
